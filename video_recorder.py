@@ -362,12 +362,9 @@ def main():  # 프로그램의 메인 실행 함수이다.
             draw_round_rect(frame, (menu_x1, menu_y1), (menu_x2, menu_y2), radius=16, color=panel_bg)
             # 각 필터 항목 (썸네일 + 이름)
             cur_y = menu_y1 + 12
-            # 썸네일 생성용으로 상단 일부 영역만 잘라서 사용
-            roi_h = min(thumb_h * 3, height - bar_height)
-            base_thumb = cv.resize(
-                raw_frame[0:roi_h, 0:roi_h],
-                (thumb_w, thumb_h),
-            )
+            # 썸네일: 카메라 전체 화면을 작게 줄여서 사용
+            camera_area = raw_frame[0 : height - bar_height, 0:width]
+            base_thumb = cv.resize(camera_area, (thumb_w, thumb_h))
             for name in FILTER_NAMES:
                 # 카드 영역 (항목 사이에 card_margin 만큼 갭을 둔다)
                 item_y1 = cur_y
