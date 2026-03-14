@@ -128,8 +128,9 @@ def main():  # 프로그램의 메인 실행 함수이다.
 
     bar_height = 120  # 아래쪽 컨트롤 바 높이 (버튼 영역, 조금 더 크게)
 
-    cv.namedWindow("Video Recorder")
-    cv.setMouseCallback("Video Recorder", on_mouse)
+    window_name = "PHOTOBOOOOOOTH"
+    cv.namedWindow(window_name)
+    cv.setMouseCallback(window_name, on_mouse)
 
     while True:  # 프로그램이 종료될 때까지 계속 반복한다.
         ret, frame = cap.read()  # 카메라에서 한 프레임을 읽어온다.
@@ -157,9 +158,12 @@ def main():  # 프로그램의 메인 실행 함수이다.
             frame = cv.cvtColor(frame, cv.COLOR_GRAY2BGR)
 
         # 전체 배경을 기본색(#CBDFEA)으로 채운 뒤, 그 위에 카메라 영상을 올린다.
-        # OpenCV는 BGR 순서를 쓰므로, RGB(#CBDFEA)는 BGR(234, 223, 203)이다.
-        bg = np.full(frame.shape, (234, 223, 203), dtype=np.uint8)
-        bg[0 : height - bar_height, 0:width] = frame[0 : height - bar_height, 0:width]
+        # BGR(234, 223, 203). frame이 2차원일 수 있으므로 배경은 (height, width, 3)으로 고정.
+        bg = np.full((height, width, 3), (234, 223, 203), dtype=np.uint8)
+        roi = frame[0 : height - bar_height, 0:width]
+        if roi.ndim == 2:
+            roi = cv.cvtColor(roi, cv.COLOR_GRAY2BGR)
+        bg[0 : height - bar_height, 0:width] = roi
         frame = bg
 
         # ===== 아래쪽 컨트롤 바 (심플한 Photo Booth 스타일) =====
@@ -431,9 +435,13 @@ def main():  # 프로그램의 메인 실행 함수이다.
         if is_recording and writer is not None:
             writer.write(frame)
 
-        cv.imshow("Video Recorder", frame)  # 현재 프레임을 화면 창에 출력한다.
+        cv.imshow(window_name, frame)  # 현재 프레임을 화면 창에 출력한다.
 
-        key = cv.waitKey(1) & 0xFF  # 1ms 동안 키 입력을 기다리고 하위 8비트만 가져온다.
+        try:
+            key = cv.waitKey(1) & 0xFF  # 1ms 동안 키 입력을 기다리고 하위 8비트만 가져온다.
+        except KeyboardInterrupt:
+            print("\n종료합니다.")
+            break  # Ctrl+C로 종료 시 정상 정리 후 빠져나간다.
         if key == 27:  # ESC 키가 눌렸는지 확인한다.
             break  # ESC가 눌리면 반복문을 종료한다.
         elif key == ord(" "):  # Space 키가 눌렸는지 확인한다.
@@ -458,4 +466,7 @@ def main():  # 프로그램의 메인 실행 함수이다.
 
 
 if __name__ == "__main__":  # 이 파일을 직접 실행했을 때만 아래 코드를 실행한다.
-    main()  # main 함수를 호출해서 프로그램을 시작한다.
+    try:
+        main()  # main 함수를 호출해서 프로그램을 시작한다.
+    except KeyboardInterrupt:
+        print("\n종료합니다.")
